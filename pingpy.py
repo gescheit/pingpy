@@ -282,8 +282,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ping')
     parser.add_argument('destination',
                         type=str,
-                        nargs="?",
-                        help='destination')
+                        help='destination host')
     parser.add_argument('-c',
                         type=int,
                         default=3,
@@ -330,8 +329,9 @@ if __name__ == '__main__':
                         help='output format')
     parser.add_argument('-B',
                         default=None,
+                        metavar="host or interface",
                         help='''source address or interface.
-                        If interface specified(need python-netifaces), some address from this iface will be used as source address.''')
+                        If interface specified (need python-netifaces), some address from this iface will be used as source address.''')
     args = parser.parse_args()
 
     basic_log_format = '%(asctime)s - l:%(lineno)d - %(funcName)s() - %(levelname)s - %(message)s'
