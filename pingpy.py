@@ -73,7 +73,7 @@ class Ping(object):
         elif self.stat['loss'] == 0:
             loss = 0
         else:
-            loss = round(self.stat['loss'] / self.stat['count'] * 100, 2)
+            loss = round(float(self.stat['loss']) / self.stat['count'] * 100, 2)
         res = {"min": round(self.stat['min'] * 1000, 2),
                "avg": round(average * 1000,2),
                "max": round(self.stat['max'] * 1000, 2),
