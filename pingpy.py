@@ -305,13 +305,20 @@ if __name__ == '__main__':
                         not stop after count packet are sent, it waits either for deadline expire or
                         until count probes are answered or for some error
                         notification from network''')
-    parser.add_argument('-i',
+    interval_group = parser.add_mutually_exclusive_group()
+    interval_group.add_argument('-i',
                         type=float,
                         metavar='interval',
                         default=1,
                         help='''wait interval seconds between sending each packet.
                         The default is to wait for one second between each packet normally, or not
                         to wait in flood mode.''')
+    interval_group.add_argument('-A',
+                                action='store_true',
+                                help='''adaptive ping. Interpacket interval adapts to round-trip time, so
+                                that effectively not more than one unanswered
+                                probe is present in the network. On networks with low rtt this mode is
+                                essentially equivalent to flood mode.''')
     parser.add_argument('-s',
                         type=int,
                         metavar='size',
@@ -379,10 +386,14 @@ if __name__ == '__main__':
     else:
         quiet = args.q
 
+    if args.A:
+        interval = 0
+    else:
+        interval = args.i
     stat = pinger.ping(target,
                        count=args.c,
                        ai_family=ai_family,
-                       interval=args.i,
+                       interval=interval,
                        total_timeout=args.w,
                        quiet=quiet,
                        bind=args.B,
