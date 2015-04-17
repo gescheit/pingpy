@@ -9,7 +9,6 @@
 """
 
 
-import os
 import sys
 import socket
 import struct
@@ -75,7 +74,7 @@ class Ping(object):
         else:
             loss = round(float(self.stat['loss']) / self.stat['count'] * 100, 2)
         res = {"min": round(self.stat['min'] * 1000, 2),
-               "avg": round(average * 1000,2),
+               "avg": round(average * 1000, 2),
                "max": round(self.stat['max'] * 1000, 2),
                "loss": loss,
                "count": self.stat['count'],
@@ -307,12 +306,12 @@ if __name__ == '__main__':
                         notification from network''')
     interval_group = parser.add_mutually_exclusive_group()
     interval_group.add_argument('-i',
-                        type=float,
-                        metavar='interval',
-                        default=1,
-                        help='''wait interval seconds between sending each packet.
-                        The default is to wait for one second between each packet normally, or not
-                        to wait in flood mode.''')
+                                type=float,
+                                metavar='interval',
+                                default=1,
+                                help='''wait interval seconds between sending each packet.
+                                The default is to wait for one second between each packet normally, or not
+                                to wait in flood mode.''')
     interval_group.add_argument('-A',
                                 action='store_true',
                                 help='''adaptive ping. Interpacket interval adapts to round-trip time, so
@@ -415,5 +414,3 @@ if __name__ == '__main__':
         print(",".join([str(stat[x]) for x in ('min', 'avg', 'max', 'count', 'loss')]))
     elif args.o == "json":
         print(json.dumps(stat))
-
-
