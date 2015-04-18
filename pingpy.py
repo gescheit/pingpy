@@ -127,6 +127,7 @@ class Ping(object):
     def send_one_ping(self, my_socket, dest_host, ai_family, size=0):
         """
         Send one ping to the given >dest_host<.
+        Return False if error.
         """
         my_checksum = 0
         self.seq_id += 1
@@ -169,7 +170,14 @@ class Ping(object):
             sockaddr = (dest_host, 0, 0, 0)
         elif ai_family == socket.AF_INET:
             sockaddr = (dest_host, 0)
-        my_socket.sendto(packet, sockaddr)
+        try:
+            my_socket.sendto(packet, sockaddr)
+        except socket.error as (errno, msg):
+            logger.warning('Socket error %s % s', errno, msg)
+            # FIXME: show this msg if not quiet
+            if 'No route to host' in msg:
+                return False
+        return True
 
     def do_one(self, addr, ai_family, timeout, bind, size=0):
         """
@@ -208,8 +216,11 @@ class Ping(object):
             self.logger.debug("use %s as source", src_addr)
             my_socket.bind((src_addr, 0))
 
-        self.send_one_ping(my_socket, addr, ai_family, size)
-        recv_status = self.receive_one_ping(my_socket, timeout)
+        send_status = self.send_one_ping(my_socket, addr, ai_family, size)
+        if send_status:
+            recv_status = self.receive_one_ping(my_socket, timeout)
+        else:
+            recv_status = False
 
         my_socket.close()
         return recv_status
