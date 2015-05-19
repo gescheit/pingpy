@@ -247,6 +247,7 @@ class Ping(object):
              quiet=True,
              bind=None,
              size=0,
+             ptp=None,
              ):
         """
         Send >count< ping to >dest_addr< with the given >timeout< and display
@@ -255,11 +256,25 @@ class Ping(object):
         if total_timeout:
             signal.setitimer(signal.ITIMER_REAL, total_timeout)
             signal.signal(signal.SIGALRM, self.timeout_handler)
-        try:
-            family, addr = self.resolve(dest_addr, ai_family)
-        except socket.gaierror as e:
-            logger.critical("failed. (gai error: '%s')", e[1])
-            return None  # error
+        if ptp:  # point-to-point mode
+            if netifaces is None:
+                raise Exception("'netifaces' module not found ")
+            addresses = netifaces.ifaddresses(dest_addr)
+
+            if ai_family == socket.AF_UNSPEC:
+                family = sorted(addresses.keys())[0]
+            else:
+                if ai_family not in addresses:
+                    raise Exception("not found ptp peer with AF %s" % ai_family)
+                family = ai_family
+            addr = addresses[family][0]['peer']
+            logger.debug("use %s as src addr", addr)
+        else:
+            try:
+                family, addr = self.resolve(dest_addr, ai_family)
+            except socket.gaierror as e:
+                logger.critical("failed. (gai error: '%s')", e[1])
+                return None  # error
         try:
             rtt = interval
             for i in range(count):
@@ -292,7 +307,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ping')
     parser.add_argument('destination',
                         type=str,
-                        help='destination host')
+                        help='destination host or interface if -ptp option is specified')
     parser.add_argument('-c',
                         type=int,
                         default=3,
@@ -334,6 +349,10 @@ if __name__ == '__main__':
                         metavar='size',
                         default=0,
                         help='packet size')
+    parser.add_argument('-ptp',
+                        action='store_true',
+                        help="""enable point-to-point mode. Useful when need to check remote addr
+                             of some tunnel iface.""")
     parser.add_argument('-d',
                         action='store_true',
                         help='enable debug')
@@ -408,6 +427,7 @@ if __name__ == '__main__':
                        quiet=quiet,
                        bind=args.B,
                        size=args.s,
+                       ptp=args.ptp,
                        )
     if stat is None:
         print >>sys.stderr, "error"
